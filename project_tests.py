@@ -132,7 +132,7 @@ def test_train_nn(train_nn):
             'batch_size': batch_size,
             'get_batches_fn': get_batches_fn,
             'train_op': train_op,
-            'cross_entropy_loss': cross_entropy_loss,
+            'loss_op': cross_entropy_loss,
             'input_image': input_image,
             'correct_label': correct_label,
             'keep_prob': keep_prob,
