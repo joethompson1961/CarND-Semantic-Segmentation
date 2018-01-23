@@ -60,35 +60,39 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     """
     # TODO: Implement function
 
-    # Add 1x1 convolutions on top of the VGG layers
-    layer7_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-#    layer7_1x1 = tf.Print(layer7_1x1, [tf.shape(layer7_1x1)])
 
-    layer4_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-#    layer4_1x1 = tf.Print(layer4_1x1, [tf.shape(layer4_1x1)])
+    # 1x1 convolutions of VGG layers
+    vgg_layer7_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+#    vgg_layer7_1x1 = tf.Print(vgg_layer7_1x1, [tf.shape(vgg_layer7_1x1)])
 
-    layer3_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-#    layer3_1x1 = tf.Print(layer3_1x1, [tf.shape(layer3_1x1)])
+    # layer 4 1x1 convolution of VGG layer 4
+    vgg_layer4_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+#    vgg_layer4_1x1 = tf.Print(vgg_layer4_1x1, [tf.shape(vgg_layer4_1x1)])
+
+    vgg_layer3_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+#    vgg_layer3_1x1 = tf.Print(vgg_layer3_1x1, [tf.shape(vgg_layer3_1x1)])
 
     # upsample layer 7
-    layer7_up = tf.layers.conv2d_transpose(layer7_1x1, num_classes, 4, 2, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-#    layer7_up = tf.Print(layer7_up, [tf.shape(layer7_up)])
+    layer4 = tf.layers.conv2d_transpose(vgg_layer7_1x1, num_classes, 4, 2, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+#    layer4 = tf.Print(layer4, [tf.shape(layer4)])
 
-    # skip connection with layer 4 1x1 into layer 4
-    layer4 = tf.add(layer7_up, layer4_1x1)
+    # skip connection with vgg layer 4 1x1
+    layer4 = tf.add(layer4, vgg_layer4_1x1)
+#    layer4 = tf.Print(layer4, [tf.shape(layer4)])
 
     # upsample layer 4
-    layer4_up = tf.layers.conv2d_transpose(layer4, num_classes, 4, 2, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-#    layer4_up = tf.Print(layer4_up, [tf.shape(layer4_up)])
+    layer3 = tf.layers.conv2d_transpose(layer4, num_classes, 4, 2, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+#    layer3 = tf.Print(layer3, [tf.shape(layer3)])
 
-    # skip connection with layer 3 1x1 into layer 3
-    layer3 = tf.add(layer4_up, layer3_1x1)
+    # skip connection with vgg layer 3 1x1
+    layer3 = tf.add(layer3, vgg_layer3_1x1)
+#    layer3 = tf.Print(layer3, [tf.shape(layer3)])
 
     # upsample
-    layer3_up = tf.layers.conv2d_transpose(layer3, num_classes, 16, 8, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-#    layer3_up = tf.Print(layer3_up, [tf.shape(layer3_up)])
+    layer_final = tf.layers.conv2d_transpose(layer3, num_classes, 16, 8, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+#    layer_final = tf.Print(layer_final, [tf.shape(layer_final)])
     
-    return layer3_up
+    return layer_final
 
 tests.test_layers(layers)
 
@@ -108,7 +112,7 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     # cross entropy loss plus the regularization loss terms
     cross_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels))
     reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-    reg_const = 0.005
+    reg_const = 0.004
     loss = cross_entropy_loss + reg_const * tf.reduce_sum(reg_loss)
 
     # training operation      
@@ -155,8 +159,8 @@ def run():
     runs_dir = './runs'
     tests.test_for_kitti_dataset(data_dir)
 
-    epochs = 2
-    batch_size = 8
+    epochs = 25
+    batch_size = 16
     lr = 0.0001
     kp = 0.5
 
