@@ -62,31 +62,31 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
 
     # Add 1x1 convolutions on top of the VGG layers
     layer7_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    layer7_1x1 = tf.Print(layer7_1x1, [tf.shape(layer7_1x1)])
+#    layer7_1x1 = tf.Print(layer7_1x1, [tf.shape(layer7_1x1)])
 
     layer4_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    layer4_1x1 = tf.Print(layer4_1x1, [tf.shape(layer4_1x1)])
+#    layer4_1x1 = tf.Print(layer4_1x1, [tf.shape(layer4_1x1)])
 
     layer3_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    layer3_1x1 = tf.Print(layer3_1x1, [tf.shape(layer3_1x1)])
+#    layer3_1x1 = tf.Print(layer3_1x1, [tf.shape(layer3_1x1)])
 
     # upsample layer 7
     layer7_up = tf.layers.conv2d_transpose(layer7_1x1, num_classes, 4, 2, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    layer7_up = tf.Print(layer7_up, [tf.shape(layer7_up)])
+#    layer7_up = tf.Print(layer7_up, [tf.shape(layer7_up)])
 
     # skip connection with layer 4 1x1 into layer 4
     layer4 = tf.add(layer7_up, layer4_1x1)
 
     # upsample layer 4
     layer4_up = tf.layers.conv2d_transpose(layer4, num_classes, 4, 2, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    layer4_up = tf.Print(layer4_up, [tf.shape(layer4_up)])
+#    layer4_up = tf.Print(layer4_up, [tf.shape(layer4_up)])
 
     # skip connection with layer 3 1x1 into layer 3
     layer3 = tf.add(layer4_up, layer3_1x1)
 
     # upsample
     layer3_up = tf.layers.conv2d_transpose(layer3, num_classes, 16, 8, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    layer3_up = tf.Print(layer3_up, [tf.shape(layer3_up)])
+#    layer3_up = tf.Print(layer3_up, [tf.shape(layer3_up)])
     
     return layer3_up
 
@@ -136,12 +136,14 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     """
     # TODO: Implement function
     sess.run(tf.global_variables_initializer())
-    for epoch in range(epochs):
+    print("training - epochs: ", epochs, " batch_size: ", batch_size)
+    for epoch in range(1, epochs+1):
+        print("epoch: ", epoch)
         for (images, labels) in get_batches_fn(batch_size):
-            # Do the training for each batch
+            # train batch
             sess.run(train_op, feed_dict={input_image: images, correct_label: labels, keep_prob: 0.5, learning_rate: 0.0001})
             loss = sess.run(cross_entropy_loss, feed_dict={input_image: images, correct_label: labels, keep_prob: 0.5, learning_rate: 0.0001})
-            print("loss: %.4f", loss)
+            print("  batch loss:", loss)
 
 tests.test_train_nn(train_nn)
 
@@ -153,8 +155,8 @@ def run():
     runs_dir = './runs'
     tests.test_for_kitti_dataset(data_dir)
 
-    epochs = 100
-    batch_size = 32
+    epochs = 2
+    batch_size = 8
     lr = 0.0001
     kp = 0.5
 
@@ -187,6 +189,7 @@ def run():
         train_nn(sess, epochs, batch_size, get_batches_fn, training_op, loss_op, input_image, correct_label, keep_prob, learning_rate)
 
         # TODO: Save inference data using helper.save_inference_samples
+        print("Saving")
         helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
 
         # OPTIONAL: Apply the trained model to a video
