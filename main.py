@@ -38,10 +38,14 @@ def load_vgg(sess, vgg_path):
     vgg_input = graph.get_tensor_by_name(vgg_input_tensor_name)
     vgg_keep= graph.get_tensor_by_name(vgg_keep_prob_tensor_name)
     vgg_layer3= graph.get_tensor_by_name(vgg_layer3_out_tensor_name)
-    vgg_layer4= graph.get_tensor_by_name(vgg_layer4_out_tensor_name)
+    vgg_layer4 = graph.get_tensor_by_name(vgg_layer4_out_tensor_name)
     vgg_layer7= graph.get_tensor_by_name(vgg_layer7_out_tensor_name)
+
+#    vgg_layer3_scaled = tf.multiply(vgg_layer3, 0.0001, name='pool3_out_scaled')
+#    vgg_layer4_scaled = tf.multiply(vgg_layer4, 0.01, name='pool4_out_scaled')
     
     return vgg_input, vgg_keep, vgg_layer3, vgg_layer4, vgg_layer7
+
 tests.test_load_vgg(load_vgg, tf)
 
 
@@ -55,30 +59,36 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :return: The Tensor for the last layer of output
     """
     # TODO: Implement function
-    # replace fully connected with 1x1 convolution
-    layer = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+
+    # Add 1x1 convolutions on top of the VGG layers
+    layer7_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    layer7_1x1 = tf.Print(layer7_1x1, [tf.shape(layer7_1x1)])
+
+    layer4_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    layer4_1x1 = tf.Print(layer4_1x1, [tf.shape(layer4_1x1)])
+
+    layer3_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    layer3_1x1 = tf.Print(layer3_1x1, [tf.shape(layer3_1x1)])
+
+    # upsample layer 7
+    layer7_up = tf.layers.conv2d_transpose(layer7_1x1, num_classes, 4, 2, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    layer7_up = tf.Print(layer7_up, [tf.shape(layer7_up)])
+
+    # skip connection with layer 4 1x1 into layer 4
+    layer4 = tf.add(layer7_up, layer4_1x1)
+
+    # upsample layer 4
+    layer4_up = tf.layers.conv2d_transpose(layer4, num_classes, 4, 2, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    layer4_up = tf.Print(layer4_up, [tf.shape(layer4_up)])
+
+    # skip connection with layer 3 1x1 into layer 3
+    layer3 = tf.add(layer4_up, layer3_1x1)
+
     # upsample
-    # FIXME
-    layer = tf.layers.conv2d_transpose(layer, num_classes, 4, 2, padding = 'same', <see classroom>, kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    tf.Print(layer, tf.shape(layer))
+    layer3_up = tf.layers.conv2d_transpose(layer3, num_classes, 16, 8, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    layer3_up = tf.Print(layer3_up, [tf.shape(layer3_up)])
     
-    # add skip layer
-    layer = tf.add(layer, vgg_layer7_out)
-    # upsample
-    # FIXME
-    layer = tf.layers.conv2d_transpose(layer, num_classes, 4, 2, padding = 'same', <see classroom>, kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    # add skip layer
-    layer = tf.add(layer, vgg_layer4_out)
-    # upsample
-    # FIXME
-    layer = tf.layers.conv2d_transpose(layer, num_classes, 4, 2, padding = 'same', <see classroom>, kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    # add skip layer
-    layer = tf.add(layer, vgg_layer3_out)
-    # 
-    # FIXME
-    layer = tf.layers.conv2d_transpose(layer, num_classes, 16, 8, padding = 'same', <see classroom>, kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    
-    return layer
+    return layer3_up
 
 tests.test_layers(layers)
 
@@ -92,16 +102,18 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     :param num_classes: Number of classes to classify
     :return: Tuple of (logits, train_op, cross_entropy_loss)
     """
-    # TODO: Implement function
     logits = tf.reshape(nn_last_layer, (-1, num_classes))
     labels = tf.reshape(correct_label, (-1, num_classes))
-    
-    cross_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, labels))
-    
-    # FIXME
-    opt = adamoptimizer() 
-    
-    return logits, opt, cross_entropy_loss
+
+    # cross entropy loss plus the regularization loss terms
+    cross_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels))
+    reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+    loss = cross_entropy_loss + tf.reduce_sum(reg_loss)
+
+    # training operation      
+    training_operation = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(loss)
+        
+    return logits, training_operation, loss
 
 tests.test_optimize(optimize)
 
@@ -122,12 +134,13 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     :param learning_rate: TF Placeholder for learning rate
     """
     # TODO: Implement function
-    for epoch in epochs:
-        for (image, label) in get_batches_fn(batch_size):
-            # Do the training
-            # Use keep_prob, learning_rate
-            loss = sess.run()
-            optimize(loss, correct_label, learning_rate, num_classes)
+    sess.run(tf.global_variables_initializer())
+    for epoch in range(epochs):
+        for (images, labels) in get_batches_fn(batch_size):
+            # Do the training for each batch
+            sess.run(train_op, feed_dict={input_image: images, correct_label: labels, keep_prob: 0.5, learning_rate: 0.001})
+            loss = sess.run(cross_entropy_loss, feed_dict={input_image: images, correct_label: labels, keep_prob: 0.5, learning_rate: 0.001})
+            print("loss: %.4f", loss)
 
 tests.test_train_nn(train_nn)
 
@@ -141,7 +154,8 @@ def run():
 
     epochs = 32
     batch_size = 512
-    learning_rate = 1.0
+    learning_rate = 0.001
+    keep_prob = 0.
 
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(data_dir)
@@ -161,11 +175,12 @@ def run():
 
         # TODO: Build NN using load_vgg, layers, and optimize function
         input_image, keep_prob, layer3_out, layer4_out, layer7_out = load_vgg(sess, vgg_path)
-        layer_out = layers(layer3_out, layer4_out, layer7_out, num_classes)
-        logits, opt, cross_entropy_loss = optimize(layer_out, correct_label, learning_rate, num_classes)
+        full_cnn = layers(layer3_out, layer4_out, layer7_out, num_classes)
+        logits, training_op, loss = optimize(full_cnn, correct_label, learning_rate, num_classes)
         
         # TODO: Train NN using the train_nn function
-        train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image, correct_label, keep_prob, learning_rate)
+        correct_label = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
+        train_nn(sess, epochs, batch_size, get_batches_fn, training_op, loss, input_image, correct_label, keep_prob, learning_rate)
 
         # TODO: Save inference data using helper.save_inference_samples
         helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
