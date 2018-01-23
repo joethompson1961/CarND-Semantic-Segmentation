@@ -108,7 +108,8 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     # cross entropy loss plus the regularization loss terms
     cross_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels))
     reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-    loss = cross_entropy_loss + tf.reduce_sum(reg_loss)
+    reg_const = 0.005
+    loss = cross_entropy_loss + reg_const * tf.reduce_sum(reg_loss)
 
     # training operation      
     training_operation = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(loss)
@@ -138,8 +139,8 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     for epoch in range(epochs):
         for (images, labels) in get_batches_fn(batch_size):
             # Do the training for each batch
-            sess.run(train_op, feed_dict={input_image: images, correct_label: labels, keep_prob: 0.5, learning_rate: 0.001})
-            loss = sess.run(cross_entropy_loss, feed_dict={input_image: images, correct_label: labels, keep_prob: 0.5, learning_rate: 0.001})
+            sess.run(train_op, feed_dict={input_image: images, correct_label: labels, keep_prob: 0.5, learning_rate: 0.0001})
+            loss = sess.run(cross_entropy_loss, feed_dict={input_image: images, correct_label: labels, keep_prob: 0.5, learning_rate: 0.0001})
             print("loss: %.4f", loss)
 
 tests.test_train_nn(train_nn)
@@ -152,10 +153,10 @@ def run():
     runs_dir = './runs'
     tests.test_for_kitti_dataset(data_dir)
 
-    epochs = 32
-    batch_size = 512
-    learning_rate = 0.001
-    keep_prob = 0.
+    epochs = 100
+    batch_size = 32
+    lr = 0.0001
+    kp = 0.5
 
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(data_dir)
@@ -174,13 +175,16 @@ def run():
         #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network
 
         # TODO: Build NN using load_vgg, layers, and optimize function
+        # TF placeholders
+        correct_label = tf.placeholder(tf.int32, [None, None, None, num_classes])
+        learning_rate = tf.placeholder(tf.float32)
+        
         input_image, keep_prob, layer3_out, layer4_out, layer7_out = load_vgg(sess, vgg_path)
         full_cnn = layers(layer3_out, layer4_out, layer7_out, num_classes)
-        logits, training_op, loss = optimize(full_cnn, correct_label, learning_rate, num_classes)
+        logits, training_op, loss_op = optimize(full_cnn, correct_label, learning_rate, num_classes)
         
         # TODO: Train NN using the train_nn function
-        correct_label = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
-        train_nn(sess, epochs, batch_size, get_batches_fn, training_op, loss, input_image, correct_label, keep_prob, learning_rate)
+        train_nn(sess, epochs, batch_size, get_batches_fn, training_op, loss_op, input_image, correct_label, keep_prob, learning_rate)
 
         # TODO: Save inference data using helper.save_inference_samples
         helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
