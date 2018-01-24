@@ -163,14 +163,13 @@ def run():
     runs_dir = './runs'
     tests.test_for_kitti_dataset(data_dir)
 
-    epochs = 25
     # Larger batch sizes might speed up the training but can degrade the quality of the model at the same time.
     # Good results obtained using small batch sizes of 2 or 4.
     # It important to note that batch size and learning rate are linked. If the batch size is too small then
     # the gradients will become more unstable and learning rate would need to be reduced (~1e-4 or 1e-5).
-    batch_size = 4
-    
-    lr = 0.0001
+    epochs = 35
+    batch_size = 2
+    lr = 0.00001
     kp = 0.6
 
     # Download pretrained vgg model
