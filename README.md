@@ -27,8 +27,10 @@ python main.py
 
 **Note** If running on AWS here are some helpful command templates:
  - To use these you'll need aws key file, e.g. "demo.pem", in your current directory
- - ssh -i "demo.pem" ubuntu@ec2-34-211-53-101.us-west-2.compute.amazonaws.com
- - scp -i "demo.pem" ubuntu@ec2-34-211-53-101.us-west-2.compute.amazonaws.com:~/term3/CarND-Semantic-Segmentation/runs/1516766527.1665726/*.png  /mnt/c/Udacity/SDCND/term3/CarND-Semantic-Segmentation/runs/1516766527.1665726
+ - `ssh -i "demo.pem" ubuntu@ec2-34-211-53-101.us-west-2.compute.amazonaws.com`
+ - `scp -i "demo.pem" '/mnt/c/Users/nxa09564/OneDrive - NXP/Udacity/SDCND/projects/term3/data_road.zip' ubuntu@ec2-52-34-6-82.us-west-2.compute.amazonaws.com:~/CarND-Semantic-Segmentation/data`
+ - `scp -i "demo.pem" '/mnt/c/Users/nxa09564/OneDrive - NXP/Udacity/SDCND/projects/term3/vgg.zip' ubuntu@ec2-52-34-6-82.us-west-2.compute.amazonaws.com:~/CarND-Semantic-Segmentation/data`
+ - `scp -ri "demo.pem" ubuntu@ec2-52-34-6-82.us-west-2.compute.amazonaws.com:~/term3/CarND-Semantic-Segmentation/runs/* /mnt/c/Udacity/SDCND/term3/CarND-Semantic-Segmentation/runs/`
 
 
 ### Submission
