@@ -164,7 +164,10 @@ def run():
     tests.test_for_kitti_dataset(data_dir)
 
     epochs = 25
+    # Larger batch sizes might speed up the training but can degrade the quality of the model at the same time.
+    # Good results obtained using small batch sizes of 2 or 4.
     batch_size = 4
+    
     lr = 0.0001
     kp = 0.6
 
