@@ -35,7 +35,7 @@ Use the following command to run the project:
     - Copy vgg.zip from local machine to instance:
         - `scp -i "demo.pem" '/mnt/c/Users/nxa09564/OneDrive - NXP/Udacity/SDCND/projects/term3/vgg.zip' ubuntu@ec2-52-34-6-82.us-west-2.compute.amazonaws.com:~/CarND-Semantic-Segmentation/data`
     - Copy run output images from instance to local machine:
-        - `scp -ri "demo.pem" ubuntu@ec2-52-34-6-82.us-west-2.compute.amazonaws.com:~/term3/CarND-Semantic-Segmentation/runs/* /mnt/c/Udacity/SDCND/term3/CarND-Semantic-Segmentation/runs/`
+        - `scp -i "demo.pem" ubuntu@ec2-52-34-6-82.us-west-2.compute.amazonaws.com:~/CarND-Semantic-Segmentation/runs/1516820578.872475/*.png '/mnt/c/Users/nxa09564/OneDrive - NXP/Udacity/SDCND/projects/term3/CarND-Semantic-Segmentation/runs/1516820578.872475'`
 
 
 ## Submission
