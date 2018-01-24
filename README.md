@@ -9,8 +9,14 @@ Make sure you have the following is installed:
  - [TensorFlow](https://www.tensorflow.org/)
  - [NumPy](http://www.numpy.org/)
  - [SciPy](https://www.scipy.org/)
-##### Dataset
-Download the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php) from [here](http://www.cvlibs.net/download.php?file=data_road.zip).  Extract the dataset in the `data` folder.  This will create the folder `data_road` with all the training a test images.
+ 
+##### Kitti Dataset
+You need the kitti dataset to train your model.  First try to download Kitti Road dataset with this command:
+ - `wget http://kitti.is.tue.mpg.de/kitti/data_road.zip`
+ 
+If that link has expired then request download link to [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php) from [here](http://www.cvlibs.net/download.php?file=data_road.zip).
+
+Once downloaded extract the dataset in the `data` folder.  This will create the folder `data_road` with all the training a test images.
 
 ##### Run
 Run the following command to run the project:
@@ -20,7 +26,7 @@ python main.py
 **Note** If running this in Jupyter Notebook system messages, such as those regarding test status, may appear in the terminal rather than the notebook.
 
 **Note** If running on AWS here are some helpful command templates:
- - <These assume the aws key file, e.g. "demo.pem", is in your current directory>
+ - To use these you'll need aws key file, e.g. "demo.pem", in your current directory
  - ssh -i "demo.pem" ubuntu@ec2-34-211-53-101.us-west-2.compute.amazonaws.com
  - scp -i "demo.pem" ubuntu@ec2-34-211-53-101.us-west-2.compute.amazonaws.com:~/term3/CarND-Semantic-Segmentation/runs/1516766527.1665726/*.png  /mnt/c/Udacity/SDCND/term3/CarND-Semantic-Segmentation/runs/1516766527.1665726
 
