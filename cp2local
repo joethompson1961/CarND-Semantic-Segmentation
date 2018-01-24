@@ -1,0 +1,2 @@
+mkdir '/mnt/c/Users/nxa09564/OneDrive - NXP/Udacity/SDCND/projects/term3/CarND-Semantic-Segmentation/runs/'$2
+scp -i "demo.pem" ubuntu@ec2-$1.us-west-2.compute.amazonaws.com:~/CarND-Semantic-Segmentation/runs/$2/*.png '/mnt/c/Users/nxa09564/OneDrive - NXP/Udacity/SDCND/projects/term3/CarND-Semantic-Segmentation/runs/'$2
