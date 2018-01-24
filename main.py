@@ -53,21 +53,29 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :return: The Tensor for the last layer of output
     """
     # 1x1 convolution of VGG layer 7
-    vgg_layer7_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    vgg_layer7_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding='same',
+                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                      kernel_initializer=tf.truncated_normal_initializer(stddev=0.01))
 #    vgg_layer7_1x1 = tf.Print(vgg_layer7_1x1, [tf.shape(vgg_layer7_1x1)])
 
     # 1x1 convolution of VGG layer 4
     vgg_layer4_scaled = tf.multiply(vgg_layer4_out, 0.01)
-    vgg_layer4_1x1 = tf.layers.conv2d(vgg_layer4_scaled, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    vgg_layer4_1x1 = tf.layers.conv2d(vgg_layer4_scaled, num_classes, 1, padding='same',
+                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                      kernel_initializer=tf.truncated_normal_initializer(stddev=0.01))
 #    vgg_layer4_1x1 = tf.Print(vgg_layer4_1x1, [tf.shape(vgg_layer4_1x1)])
 
     # 1x1 convolution of VGG layer 3
     vgg_layer3_scaled = tf.multiply(vgg_layer3_out, 0.0001)
-    vgg_layer3_1x1 = tf.layers.conv2d(vgg_layer3_scaled, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    vgg_layer3_1x1 = tf.layers.conv2d(vgg_layer3_scaled, num_classes, 1, padding='same',
+                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                      kernel_initializer=tf.truncated_normal_initializer(stddev=0.01))
 #    vgg_layer3_1x1 = tf.Print(vgg_layer3_1x1, [tf.shape(vgg_layer3_1x1)])
 
     # upsample layer 7
-    layer4 = tf.layers.conv2d_transpose(vgg_layer7_1x1, num_classes, 4, 2, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    layer4 = tf.layers.conv2d_transpose(vgg_layer7_1x1, num_classes, 4, 2, padding = 'same',
+                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                        kernel_initializer=tf.truncated_normal_initializer(stddev=0.01))
 #    layer4 = tf.Print(layer4, [tf.shape(layer4)])
 
     # skip connection with vgg layer 4 1x1
@@ -75,7 +83,9 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
 #    layer4 = tf.Print(layer4, [tf.shape(layer4)])
 
     # upsample layer 4
-    layer3 = tf.layers.conv2d_transpose(layer4, num_classes, 4, 2, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    layer3 = tf.layers.conv2d_transpose(layer4, num_classes, 4, 2, padding = 'same',
+                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                        kernel_initializer=tf.truncated_normal_initializer(stddev=0.01))
 #    layer3 = tf.Print(layer3, [tf.shape(layer3)])
 
     # skip connection with vgg layer 3 1x1
@@ -83,7 +93,9 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
 #    layer3 = tf.Print(layer3, [tf.shape(layer3)])
 
     # upsample
-    layer_final = tf.layers.conv2d_transpose(layer3, num_classes, 16, 8, padding = 'same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    layer_final = tf.layers.conv2d_transpose(layer3, num_classes, 16, 8, padding = 'same',
+                                             kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                             kernel_initializer=tf.truncated_normal_initializer(stddev=0.01))
 #    layer_final = tf.Print(layer_final, [tf.shape(layer_final)])
     
     return layer_final
@@ -152,7 +164,7 @@ def run():
     tests.test_for_kitti_dataset(data_dir)
 
     epochs = 25
-    batch_size = 16
+    batch_size = 4
     lr = 0.0001
     kp = 0.6
 
@@ -172,19 +184,21 @@ def run():
         # OPTIONAL: Augment Images for better results
         #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network
 
-        # TODO: Build NN using load_vgg, layers, and optimize function
+        # Build NN using load_vgg, layers, and optimize function
+
         # TF placeholders
         correct_label = tf.placeholder(tf.int32, [None, None, None, num_classes])
         learning_rate = tf.placeholder(tf.float32)
         
+        # import vgg model, add FCN decoder layers, define optimizer
         input_image, keep_prob, layer3_out, layer4_out, layer7_out = load_vgg(sess, vgg_path)
         full_cnn = layers(layer3_out, layer4_out, layer7_out, num_classes)
         logits, training_op, loss_op = optimize(full_cnn, correct_label, learning_rate, num_classes)
         
-        # TODO: Train NN using the train_nn function
+        # Train NN using the train_nn function
         train_nn(sess, epochs, batch_size, get_batches_fn, training_op, loss_op, input_image, correct_label, keep_prob, learning_rate)
 
-        # TODO: Save inference data using helper.save_inference_samples
+        # Save inference data using helper.save_inference_samples
         print("Saving")
         helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
 
