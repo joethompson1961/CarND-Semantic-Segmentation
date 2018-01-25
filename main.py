@@ -177,13 +177,14 @@ def run():
     # You'll need a GPU with at least 10 teraFLOPS to train on.
     #  https://www.cityscapes-dataset.com/
 
-    with tf.Session() as sess:
-        # hyperparameter search
-        for reg in [1.0, 0.1, 0.01, 0.001]:
-            for lr in [0.0001,0.00005, 0.00001]:
-                for kp in [0.5, 0.7, 0.9]:
-                    param_str = "_kp-%.2f_lr-%.5f_reg-%.3f" % (kp, lr, reg)
-                    
+    # hyperparameter search
+    for reg in [1.0, 0.1, 0.01, 0.001]:
+        for lr in [0.0001,0.00005, 0.00001]:
+            for kp in [0.5, 0.7, 0.9]:
+                
+                param_str = "_kp-%.2f_lr-%.5f_reg-%.3f" % (kp, lr, reg)
+
+                with tf.Session() as sess:    
                     print('Starting run for %s' % param_str)
         
                     # Path to vgg model
