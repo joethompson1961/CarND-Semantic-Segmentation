@@ -178,9 +178,9 @@ def run():
     #  https://www.cityscapes-dataset.com/
 
     # hyperparameter search
-    for reg in [1.0, 0.1, 0.01, 0.001]:
+    for reg in [1.0, 0.1, 0.01]:
         for lr in [0.0001,0.00005, 0.00001]:
-            for kp in [0.5, 0.7, 0.9]:
+            for kp in [0.5, 0.6, 0.7]:
                 
                 param_str = "_kp-%.2f_lr-%.5f_reg-%.3f" % (kp, lr, reg)
 
