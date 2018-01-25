@@ -29,7 +29,7 @@ Use the following command to run the project:
  - You need to change the IP address in the link to your specific instance which can be found on AWS EC2 management console Instances group by clicking "Connect" on the instance:
  - You need the AWS key file, e.g. "demo.pem", in your current directory
     - SSH connection to AWS instance:
-        - `ssh -i "demo.pem" ubuntu@ec2-34-211-53-101.us-west-2.compute.amazonaws.com`
+        - `ssh -i "demo.pem" ubuntu@ec2-52-34-6-82.us-west-2.compute.amazonaws.com`
     - Copy data_road.zip from local machine to instance:
         - `scp -i "demo.pem" '/mnt/c/Users/nxa09564/OneDrive - NXP/Udacity/SDCND/projects/term3/data_road.zip' ubuntu@ec2-52-34-6-82.us-west-2.compute.amazonaws.com:~/CarND-Semantic-Segmentation/data`
     - Copy vgg.zip from local machine to instance:
